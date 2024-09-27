@@ -103,3 +103,86 @@ class ReLU:
                 constant=0.0,
                 name=layer._indexed_name(index, "relu"),
             )
+
+
+class SiLU:
+    """Class to apply the SiLU activation on a neural network layer.
+
+    Parameters
+    ----------
+    setbounds : Bool
+        Optional flag not to set bounds on the output variables.
+    bigm : Float
+        Optional maximal value for bounds use in the formulation
+
+    Attributes
+    ----------
+    setbounds : Bool
+        Optional flag not to set bounds on the output variables.
+    bigm : Float
+        Optional maximal value for bounds use in the formulation
+    """
+
+    def __init__(self):
+        pass
+
+    def mip_model(self, layer):
+        """MINLP model for SiLU activation on a layer.
+
+        Parameters
+        ----------
+        layer : AbstractNNLayer
+            Layer to which activation is applied.
+        """
+        output = layer.output
+        output.setAttr("lb", 0.0)  
+        output.setAttr("ub", 1.0) 
+        if hasattr(layer, "coefs"):
+            if not hasattr(layer, "mixing"):
+                mixing = layer.gp_model.addMVar(
+                    output.shape,
+                    lb=-GRB.INFINITY,
+                    vtype=GRB.CONTINUOUS,
+                    name=layer._name_var("mix"),
+                )
+                layer.mixing = mixing
+            layer.gp_model.update()
+
+            layer.gp_model.addConstr(
+                layer.mixing == layer.input @ layer.coefs + layer.intercept
+            )
+        else:
+            mixing = layer._input
+            
+        if not hasattr(layer, "x"):
+                x = layer.gp_model.addMVar(
+                    output.shape,
+                    lb=-GRB.INFINITY,
+                    vtype=GRB.CONTINUOUS,
+                    name=layer._name_var("x"),
+                )
+            
+        if not hasattr(layer, "exp_x"):
+                exp_x = layer.gp_model.addMVar(
+                    output.shape,
+                    lb=-GRB.INFINITY,
+                    vtype=GRB.CONTINUOUS,
+                    name=layer._name_var("exp_x"),
+                )
+                
+        if not hasattr(layer, "exp_sum"):
+                exp_sum = layer.gp_model.addMVar(
+                    output.shape,
+                    lb=-GRB.INFINITY,
+                    vtype=GRB.CONTINUOUS,
+                    name=layer._name_var("exp_sum"),
+                )
+                
+        for index in np.ndindex(output.shape):
+            layer.gp_model.addConstr(x[index] == - mixing[index])
+            layer.gp_model.addGenConstrExp(x[index], exp_x[index])
+            layer.gp_model.addConstr(exp_sum[index] == 1 + exp_x[index])
+            layer.gp_model.addConstr(
+                output[index] * exp_sum[index] == 1,
+                name=layer._indexed_name(index, "silu"),
+            )

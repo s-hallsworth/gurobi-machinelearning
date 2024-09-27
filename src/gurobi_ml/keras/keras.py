@@ -77,7 +77,7 @@ class KerasNetworkConstr(BaseNNConstr):
             if isinstance(step, keras.layers.Dense):
                 config = step.get_config()
                 activation = config["activation"]
-                if activation not in ("relu", "linear"):
+                if activation not in ("relu", "linear", "silu"):
                     raise NoModel(predictor, f"Unsupported activation {activation}")
             elif isinstance(step, keras.layers.ReLU):
                 if step.negative_slope != 0.0:
@@ -116,6 +116,7 @@ class KerasNetworkConstr(BaseNNConstr):
                 )
                 _input = layer.output
             else:
+                print(step, type(step))
                 config = step.get_config()
                 activation = config["activation"]
                 if activation == "linear":
