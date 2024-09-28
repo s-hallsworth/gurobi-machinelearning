@@ -135,9 +135,9 @@ class SiLU:
             Layer to which activation is applied.
         """
         output = layer.output
-        output.setAttr("lb", 0.0)  
-        output.setAttr("ub", 1.0) 
         if hasattr(layer, "coefs"):
+            print(np.array(layer.coefs).shape, np.array(layer.intercept).shape)
+            print(np.array(layer.input).shape)
             if not hasattr(layer, "mixing"):
                 mixing = layer.gp_model.addMVar(
                     output.shape,
@@ -179,10 +179,10 @@ class SiLU:
                 )
                 
         for index in np.ndindex(output.shape):
-            layer.gp_model.addConstr(x[index] == - mixing[index])
+            layer.gp_model.addConstr(x[index] == -1 * mixing[index])
             layer.gp_model.addGenConstrExp(x[index], exp_x[index])
             layer.gp_model.addConstr(exp_sum[index] == 1 + exp_x[index])
             layer.gp_model.addConstr(
-                output[index] * exp_sum[index] == 1,
+                output[index] * exp_sum[index] == mixing[index],
                 name=layer._indexed_name(index, "silu"),
             )

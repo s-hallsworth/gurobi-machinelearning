@@ -115,10 +115,20 @@ class KerasNetworkConstr(BaseNNConstr):
                     _input, self.act_dict["relu"], output, name=f"relu{i}", **kwargs
                 )
                 _input = layer.output
+                
+            elif isinstance(step, keras.layers.Activation) and step.activation == keras.activations.sigmoid:
+                layer = self._add_activation_layer(
+                    _input, self.act_dict["silu"], output, name=f"silu{i}", **kwargs
+                )
+                _input = layer.output
             else:
-                print(step, type(step))
+                
                 config = step.get_config()
                 activation = config["activation"]
+                
+                print(step)
+                print(activation)
+                
                 if activation == "linear":
                     activation = "identity"
                 weights, bias = step.get_weights()

@@ -88,7 +88,7 @@ class MLPRegressorConstr(SKgetter, BaseNNConstr):
             clean_predictor=clean_predictor,
             **kwargs,
         )
-        assert predictor.out_activation_ in ("identity", "relu")
+        assert predictor.out_activation_ in ("identity", "relu", "silu")
 
     def _mip_model(self, **kwargs):
         """Add the prediction constraints to Gurobi."""
