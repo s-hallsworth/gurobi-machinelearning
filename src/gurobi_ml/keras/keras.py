@@ -126,9 +126,6 @@ class KerasNetworkConstr(BaseNNConstr):
                 config = step.get_config()
                 activation = config["activation"]
                 
-                print(step)
-                print(activation)
-                
                 if activation == "linear":
                     activation = "identity"
                 weights, bias = step.get_weights()

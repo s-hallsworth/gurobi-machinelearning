@@ -136,8 +136,6 @@ class SiLU:
         """
         output = layer.output
         if hasattr(layer, "coefs"):
-            print(np.array(layer.coefs).shape, np.array(layer.intercept).shape)
-            print(np.array(layer.input).shape)
             if not hasattr(layer, "mixing"):
                 mixing = layer.gp_model.addMVar(
                     output.shape,
