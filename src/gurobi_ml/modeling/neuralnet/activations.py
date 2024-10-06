@@ -175,12 +175,24 @@ class SiLU:
                     vtype=GRB.CONTINUOUS,
                     name=layer._name_var("exp_sum"),
                 )
+        if not hasattr(layer, "sigmoid"):
+                sigmoid = layer.gp_model.addMVar(
+                    output.shape,
+                    lb=-GRB.INFINITY,
+                    vtype=GRB.CONTINUOUS,
+                    name=layer._name_var("sigmoid"),
+                )
                 
         for index in np.ndindex(output.shape):
             layer.gp_model.addConstr(x[index] == -1 * mixing[index])
             layer.gp_model.addGenConstrExp(x[index], exp_x[index])
             layer.gp_model.addConstr(exp_sum[index] == 1 + exp_x[index])
+            layer.gp_model.addConstr(sigmoid[index] * exp_sum[index] == 1 )
             layer.gp_model.addConstr(
-                output[index] * exp_sum[index] == mixing[index],
+                output[index]  == mixing[index] * sigmoid[index],
                 name=layer._indexed_name(index, "silu"),
             )
+            output[index].lb = min(mixing[index].lb, 0)
+            output[index].ub = mixing[index].ub
+            sigmoid[index].lb = 0
+            sigmoid[index].ub = 1

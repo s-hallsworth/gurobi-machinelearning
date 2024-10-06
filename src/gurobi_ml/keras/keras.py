@@ -106,6 +106,8 @@ class KerasNetworkConstr(BaseNNConstr):
         num_layers = len(network.layers)
 
         for i, step in enumerate(network.layers):
+            print(step, type(step))
+            
             if i == num_layers - 1:
                 output = self._output
             if isinstance(step, keras.layers.InputLayer):
